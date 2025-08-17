@@ -32,6 +32,19 @@ def get_db_connection():
         print(f"An error occurred: {e}")
         return None, None, None, None
 
+# Add this function to db_utils.py
+def get_latest_updates(updates_collection, limit=5):
+    """
+    Fetches the latest documents from the updates collection, sorted by date.
+    """
+    try:
+        # Sort by date_published in descending order and limit the number of results
+        latest = updates_collection.find().sort("date_published", -1).limit(limit)
+        return list(latest)
+    except Exception as e:
+        print(f"Error fetching latest updates: {e}")
+        return []
+
 # You can run this file directly to test the connection
 if __name__ == "__main__":
     client, db, kb, upd = get_db_connection()
