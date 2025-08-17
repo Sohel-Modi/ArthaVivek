@@ -1,0 +1,16 @@
+ # For the Web App UI
+streamlit
+
+# For the AI and LLM logic
+openai
+langchain
+langchain-openai
+sentence-transformers
+
+# For the Database
+pymongo
+
+# For data ingestion and environment variables
+python-dotenv
+beautifulsoup4
+requests
