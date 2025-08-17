@@ -1,18 +1,28 @@
 import streamlit as st
-from db_utils import get_db_connection, get_latest_updates 
-from agent import get_financial_advice  
+import asyncio
+import nest_asyncio
 
-# --- Page Configuration ---
+# --- Apply the patch ---
+nest_asyncio.apply()
+
+from db_utils import get_db_connection, get_latest_updates
+from agent import get_financial_advice
+from translation_utils import translate
+
+# --- Page Configuration and Title ---
 st.set_page_config(page_title="Arthavivek", page_icon="🎓", layout="wide")
-
-# --- Main Title and Subtitle ---
 st.title("🎓 Arthavivek")
-st.caption("Financial Wisdom  | समृद्धी की ओर पहला कदम")
-
+st.caption("Financial Wisdom for India's Youth | भारत के युवाओं के लिए वित्तीय विवेक")
 st.write("---")
 
 # --- Database Connection ---
 client, db, knowledge_base, updates_collection = get_db_connection()
+
+# --- Language Selection ---
+st.sidebar.header("Language Settings")
+# --- THIS IS THE ONLY LINE WE ARE CHANGING ---
+languages = ["English", "हिन्दी (Hindi)", "मराठी (Marathi)", "ગુજરાતી (Gujarati)", "বাংলা (Bengali)", "తెలుగు (Telugu)", "தமிழ் (Tamil)"]
+language = st.sidebar.radio("Select Language", languages)
 
 # --- Two-Column Layout ---
 col1, col2 = st.columns([2, 1])
@@ -27,18 +37,19 @@ with col1:
     persona_english = persona.split(" ")[0]
 
     st.subheader("Step 2: Ask your question")
-    user_query = st.text_area("Enter your financial question here:", placeholder="e.g., How can I start investing with ₹500?", height=150)
+    user_query = st.text_area("Enter your financial question here:", placeholder="e.g., How can I start an SIP?", height=150)
 
     if st.button("Get Advice", type="primary", use_container_width=True):
         if user_query and client:
             with st.spinner("Arthavivek is thinking..."):
-                # --- NEW: Handle the dictionary response ---
                 response_data = get_financial_advice(user_query, persona_english)
+                english_answer = response_data['answer']
                 
-                # Display the main text answer
-                st.markdown(response_data['answer'])
+                # This logic now works for all languages
+                display_answer = asyncio.run(translate(english_answer, language))
 
-                # --- NEW: Display related content if it exists ---
+                st.markdown(display_answer)
+
                 if response_data['videos'] or response_data['blogs']:
                     st.write("---")
                     st.subheader("For Deeper Knowledge 📚")
@@ -46,7 +57,6 @@ with col1:
                         st.video(video_url)
                     for blog_url in response_data['blogs']:
                         st.link_button("Read a related blog post", blog_url)
-
         elif not client:
             st.error("Database connection failed.")
         else:
@@ -68,8 +78,6 @@ with col2:
             st.info("No articles found in the Knowledge Hub yet.")
     else:
         st.warning("Could not connect to the Knowledge Hub.")
-
-
 
 # with col1:
 #     st.header("🤖 Your AI Financial Coach")
