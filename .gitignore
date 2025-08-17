@@ -7,4 +7,4 @@ Vitta_env/
 # Ignore environment variable file
 .env
 
-scripts/
+scripts/__pycache__/
