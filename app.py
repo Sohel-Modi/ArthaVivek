@@ -9,75 +9,178 @@ from db_utils import get_db_connection, get_latest_updates
 from agent import get_financial_advice
 from translation_utils import translate
 
-# --- Page Configuration and Title ---
+# --- Page Configuration ---
 st.set_page_config(page_title="Arthavivek", page_icon="🎓", layout="wide")
+
+# --- Sidebar ---
+with st.sidebar:
+    st.image("https://i.imgur.com/M6y7pC3.png", width=100)
+    st.header("Language Settings")
+    languages = ["English", "हिन्दी (Hindi)", "मराठी (Marathi)", "ગુજરાતી (Gujarati)", "বাংলা (Bengali)", "తెలుగు (Telugu)", "தமிழ் (Tamil)"]
+    language = st.sidebar.radio("Select Language", languages, help="Select the language for the AI's response.")
+    st.divider()
+    st.info("Arthavivek is an AI-powered financial literacy coach designed for India's youth.")
+
+# --- Main Title ---
 st.title("🎓 Arthavivek")
 st.caption("Financial Wisdom for India's Youth | भारत के युवाओं के लिए वित्तीय विवेक")
-st.write("---")
 
 # --- Database Connection ---
 client, db, knowledge_base, updates_collection = get_db_connection()
 
-# --- Language Selection ---
-st.sidebar.header("Language Settings")
-# --- THIS IS THE ONLY LINE WE ARE CHANGING ---
-languages = ["English", "हिन्दी (Hindi)", "मराठी (Marathi)", "ગુજરાતી (Gujarati)", "বাংলা (Bengali)", "తెలుగు (Telugu)", "தமிழ் (Tamil)"]
-language = st.sidebar.radio("Select Language", languages)
-
 # --- Two-Column Layout ---
-col1, col2 = st.columns([2, 1])
+col1, col2 = st.columns([2, 1], gap="large")
 
 # --- Column 1: The AI Coach Interface ---
 with col1:
     st.header("🤖 Your AI Financial Coach")
     
-    st.subheader("Step 1: Select your persona")
-    persona_options = ("Student (विद्यार्थी)", "Early-Career Professional (युवा पेशेवर)")
-    persona = st.radio("Choose who you are:", persona_options, horizontal=True)
-    persona_english = persona.split(" ")[0]
+    with st.container(border=True):
+        st.subheader("Step 1: Select your persona")
+        persona_options = ("Student (विद्यार्थी)", "Early-Career Professional (युवा पेशेवर)")
+        persona = st.radio("Choose who you are:", persona_options, horizontal=True)
+        persona_english = persona.split(" ")[0]
 
-    st.subheader("Step 2: Ask your question")
-    user_query = st.text_area("Enter your financial question here:", placeholder="e.g., How can I start an SIP?", height=150)
+        st.subheader("Step 2: Ask your question")
+        user_query = st.text_area("Enter your financial question here:", placeholder="e.g., How can I start an SIP?", height=150, label_visibility="collapsed")
 
-    if st.button("Get Advice", type="primary", use_container_width=True):
-        if user_query and client:
-            with st.spinner("Arthavivek is thinking..."):
-                response_data = get_financial_advice(user_query, persona_english)
-                english_answer = response_data['answer']
-                
-                # This logic now works for all languages
-                display_answer = asyncio.run(translate(english_answer, language))
+        if st.button("Get Advice", type="primary", use_container_width=True):
+            if user_query and client:
+                with st.spinner("Arthavivek is thinking..."):
+                    try:
+                        # --- NEW: Added a try...except block for robustness ---
+                        response_data = get_financial_advice(user_query, persona_english)
+                        english_answer = response_data['answer']
+                        
+                        display_answer = asyncio.run(translate(english_answer, language))
+                        st.markdown(display_answer)
 
-                st.markdown(display_answer)
+                        if response_data['videos'] or response_data['blogs']:
+                            st.divider()
+                            st.subheader("For Deeper Knowledge 📚")
+                            for video_url in response_data['videos']:
+                                st.video(video_url)
+                            for blog_url in response_data['blogs']:
+                                st.link_button("Read a related blog post ↗️", blog_url)
+                    except Exception as e:
+                        st.error(f"An error occurred: {e}")
+                        st.error("Sorry, I couldn't process your request. Please try again later.")
 
-                if response_data['videos'] or response_data['blogs']:
-                    st.write("---")
-                    st.subheader("For Deeper Knowledge 📚")
-                    for video_url in response_data['videos']:
-                        st.video(video_url)
-                    for blog_url in response_data['blogs']:
-                        st.link_button("Read a related blog post", blog_url)
-        elif not client:
-            st.error("Database connection failed.")
-        else:
-            st.warning("Please enter a question.")
+            elif not client:
+                st.error("Database connection failed. Please check your credentials and network.")
+            else:
+                st.warning("Please enter a question.")
+    
+    st.divider()
+    # --- NEW: Added a permanent, visible disclaimer ---
+    st.warning(
+        """
+        **Disclaimer:** Arthavivek is an AI educational tool. 
+        The information provided is not a substitute for professional financial advice. 
+        Please consult a SEBI registered financial advisor before making any investment decisions.
+        """,
+        icon="⚠️"
+    )
 
 # --- Column 2: The Knowledge Hub ---
 with col2:
     st.header("💡 Knowledge Hub")
     if client:
-        latest_articles = get_latest_updates(updates_collection)
+        latest_articles = get_latest_updates(updates_collection, limit=5)
         if latest_articles:
             for article in latest_articles:
-                st.subheader(article['title'])
-                st.caption(f"Source: {article['source']} | Published: {article['date_published']}")
-                st.markdown(article['summary'])
-                st.link_button("Read More", article['original_link'])
-                st.write("---")
+                with st.container(border=True):
+                    st.subheader(article['title'])
+                    st.caption(f"Source: {article['source']} | Published: {article['date_published']}")
+                    st.markdown(article['summary'])
+                    if article.get('original_link') != "#":
+                        st.link_button("Read More ↗️", article['original_link'])
         else:
             st.info("No articles found in the Knowledge Hub yet.")
     else:
         st.warning("Could not connect to the Knowledge Hub.")
+
+#--------------------- Old Best
+# import streamlit as st
+# import asyncio
+# import nest_asyncio
+
+# # --- Apply the patch ---
+# nest_asyncio.apply()
+
+# from db_utils import get_db_connection, get_latest_updates
+# from agent import get_financial_advice
+# from translation_utils import translate
+
+# # --- Page Configuration and Title ---
+# st.set_page_config(page_title="Arthavivek", page_icon="🎓", layout="wide")
+# st.title("🎓 Arthavivek")
+# st.caption("Financial Wisdom for India's Youth | भारत के युवाओं के लिए वित्तीय विवेक")
+# st.write("---")
+
+# # --- Database Connection ---
+# client, db, knowledge_base, updates_collection = get_db_connection()
+
+# # --- Language Selection ---
+# st.sidebar.header("Language Settings")
+# # --- THIS IS THE ONLY LINE WE ARE CHANGING ---
+# languages = ["English", "हिन्दी (Hindi)", "मराठी (Marathi)", "ગુજરાતી (Gujarati)", "বাংলা (Bengali)", "తెలుగు (Telugu)", "தமிழ் (Tamil)"]
+# language = st.sidebar.radio("Select Language", languages)
+
+# # --- Two-Column Layout ---
+# col1, col2 = st.columns([2, 1])
+
+# # --- Column 1: The AI Coach Interface ---
+# with col1:
+#     st.header("🤖 Your AI Financial Coach")
+    
+#     st.subheader("Step 1: Select your persona")
+#     persona_options = ("Student (विद्यार्थी)", "Early-Career Professional (युवा पेशेवर)")
+#     persona = st.radio("Choose who you are:", persona_options, horizontal=True)
+#     persona_english = persona.split(" ")[0]
+
+#     st.subheader("Step 2: Ask your question")
+#     user_query = st.text_area("Enter your financial question here:", placeholder="e.g., How can I start an SIP?", height=150)
+
+#     if st.button("Get Advice", type="primary", use_container_width=True):
+#         if user_query and client:
+#             with st.spinner("Arthavivek is thinking..."):
+#                 response_data = get_financial_advice(user_query, persona_english)
+#                 english_answer = response_data['answer']
+                
+#                 # This logic now works for all languages
+#                 display_answer = asyncio.run(translate(english_answer, language))
+
+#                 st.markdown(display_answer)
+
+#                 if response_data['videos'] or response_data['blogs']:
+#                     st.write("---")
+#                     st.subheader("For Deeper Knowledge 📚")
+#                     for video_url in response_data['videos']:
+#                         st.video(video_url)
+#                     for blog_url in response_data['blogs']:
+#                         st.link_button("Read a related blog post", blog_url)
+#         elif not client:
+#             st.error("Database connection failed.")
+#         else:
+#             st.warning("Please enter a question.")
+
+# # --- Column 2: The Knowledge Hub ---
+# with col2:
+#     st.header("💡 Knowledge Hub")
+#     if client:
+#         latest_articles = get_latest_updates(updates_collection)
+#         if latest_articles:
+#             for article in latest_articles:
+#                 st.subheader(article['title'])
+#                 st.caption(f"Source: {article['source']} | Published: {article['date_published']}")
+#                 st.markdown(article['summary'])
+#                 st.link_button("Read More", article['original_link'])
+#                 st.write("---")
+#         else:
+#             st.info("No articles found in the Knowledge Hub yet.")
+#     else:
+#         st.warning("Could not connect to the Knowledge Hub.")
 
 # with col1:
 #     st.header("🤖 Your AI Financial Coach")
