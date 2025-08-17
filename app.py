@@ -1,19 +1,21 @@
 import streamlit as st
+from db_utils import get_db_connection
+from agent import get_financial_advice  
 
 # --- Page Configuration ---
-# Set the page title and icon for the browser tab
-st.set_page_config(page_title="ArthaVivek", page_icon="🎓", layout="wide")
+st.set_page_config(page_title="Arthavivek", page_icon="🎓", layout="wide")
 
 # --- Main Title and Subtitle ---
-st.title("🎓 ArthaVivek")
-st.caption("Financial Wisdom | समृद्धी के ओर पहला कदम")
+st.title("🎓 Arthavivek")
+st.caption("Financial Wisdom  | समृद्धी की ओर पहला कदम")
 
 st.write("---")
 
-# --- Two-Column Layout ---
-# Create two columns: one for the AI Coach, one for the Knowledge Hub
-col1, col2 = st.columns([2, 1]) # The AI Coach column is twice as wide
+# --- Database Connection (runs only once) ---
+client, db, knowledge_base, updates = get_db_connection()
 
+# --- Two-Column Layout ---
+col1, col2 = st.columns([2, 1])
 
 # --- Column 1: The AI Coach Interface ---
 with col1:
@@ -21,11 +23,14 @@ with col1:
     
     # Persona Selection
     st.subheader("Step 1: Select your persona")
+    persona_options = ("Student (विद्यार्थी)", "Early-Career Professional (युवा पेशेवर)")
     persona = st.radio(
         "Choose who you are:",
-        ("Student (विद्यार्थी)", "Early-Career Professional (युवा पेशेवर)"),
+        persona_options,
         horizontal=True,
     )
+    # Extract the English part of the persona for the backend
+    persona_english = persona.split(" ")[0]
 
     # User Input
     st.subheader("Step 2: Ask your question")
@@ -37,14 +42,16 @@ with col1:
 
     # Submit Button
     if st.button("Get Advice", type="primary", use_container_width=True):
-        if user_query:
-            # This is where we will call our AI agent in a future step
-            st.success("Button clicked! We will connect the AI logic here on Day 5.")
-            # For now, just show a placeholder response
-            st.markdown("Thinking...") 
+        if user_query and client:  # Check if query exists and DB is connected
+            # --- 2. THIS IS THE MAGIC PART ---
+            # Replace placeholder with the actual call to our AI agent
+            with st.spinner("Arthavivek is thinking..."):
+                response = get_financial_advice(user_query, persona_english)
+                st.markdown(response) # Display the formatted response
+        elif not client:
+            st.error("Database connection failed. Please check your credentials and network.")
         else:
             st.warning("Please enter a question before getting advice.")
-
 
 # --- Column 2: The Knowledge Hub ---
 with col2:
@@ -56,4 +63,5 @@ with col2:
     st.write("A brief, easy-to-understand summary of a recent RBI policy will be displayed here.")
     
     st.subheader("Example: What is a Demat Account?")
-    st.write("A simple explanation of a common financial concept will be shown here.") 
+    st.write("A simple explanation of a common financial concept will be shown here.")
+
