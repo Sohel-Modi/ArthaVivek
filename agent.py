@@ -1,4 +1,5 @@
 import os
+import json
 from dotenv import load_dotenv
 from openai import OpenAI
 from db_utils import get_db_connection
@@ -63,18 +64,9 @@ def get_financial_advice(query: str, persona: str) -> dict:
     6.  Keep the tone encouraging, like a knowledgeable friend.
     7.  Do not include a disclaimer in your response, as it is already handled by the user interface.
     """
-        # system_prompt = f"""
-    # You are 'Arthavivek', a friendly and wise financial coach for India's youth.
-    # Your user is a '{persona}'. Your goal is to provide simple, safe, and encouraging financial education.
-    # RULES:
-    # 1.  Use the provided 'CONTEXT' to form your primary answer.
-    # 2.  **Format your answer using markdown.** Use headings, bold text, and bullet points to make it easy to read.
-    # 3.  Do NOT recommend specific stocks or products.
-    # 4.  Speak in a mix of simple English and Hindi (Hinglish).
-    # 5.  Keep the tone encouraging, like a knowledgeable friend.
-    # 6.  Include a clear disclaimer at the end: "**Disclaimer:** This is for educational purposes only. Please consult a SEBI registered financial advisor."
-    # """
+    
     user_prompt = f"CONTEXT:\n{context}\n\nMY QUESTION:\n{query}"
+    
 
     # --- 3. GENERATION ---
     try:

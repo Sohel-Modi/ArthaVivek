@@ -14,7 +14,6 @@ st.set_page_config(page_title="Arthavivek", page_icon="🎓", layout="wide")
 
 # --- Sidebar ---
 with st.sidebar:
-    st.image("https://i.imgur.com/M6y7pC3.png", width=100)
     st.header("Language Settings")
     languages = ["English", "हिन्दी (Hindi)", "मराठी (Marathi)", "ગુજરાતી (Gujarati)", "বাংলা (Bengali)", "తెలుగు (Telugu)", "தமிழ் (Tamil)"]
     language = st.sidebar.radio("Select Language", languages, help="Select the language for the AI's response.")
@@ -33,7 +32,7 @@ col1, col2 = st.columns([2, 1], gap="large")
 
 # --- Column 1: The AI Coach Interface ---
 with col1:
-    st.header("🤖 Your AI Financial Coach")
+    st.header("Your AI Financial Coach")
     
     with st.container(border=True):
         st.subheader("Step 1: Select your persona")
@@ -51,6 +50,13 @@ with col1:
                         # --- NEW: Added a try...except block for robustness ---
                         response_data = get_financial_advice(user_query, persona_english)
                         english_answer = response_data['answer']
+                        
+                        # # --- NEW: Render the structured JSON response ---
+                        # with st.container(border=True):
+                        #     for section in english_answer:
+                        #         st.subheader(section.get('heading', ''))
+                        #         for point in section.get('points', []):
+                        #             st.markdown(f"- {point}")
                         
                         display_answer = asyncio.run(translate(english_answer, language))
                         st.markdown(display_answer)
