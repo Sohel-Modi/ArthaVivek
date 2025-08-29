@@ -190,6 +190,7 @@ if __name__ == "__main__":
         {
             "url": "https://groww.in/calculators/sip-calculator", "topic": "How to Use an SIP Calculator", "personas": ["student", "professional"], "tags": ["sip", "calculator", "tools", "planning", "investing"], "related_videos": ["https://www.youtube.com/watch?v=zTf2T17T4zM"], "related_blogs": ["https://www.etmoney.com/tools/sip-calculator"]
         }
+        
     ]
     
     ingest_articles(ARTICLES_TO_INGEST)
