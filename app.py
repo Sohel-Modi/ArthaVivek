@@ -7,22 +7,39 @@ nest_asyncio.apply()
 
 from db_utils import get_db_connection, get_latest_updates
 from agent import get_financial_advice
-from translation_utils import translate
+# Import the new, larger language map
+from translation_utils import translate, LANG_CODE_MAP
 
 # --- Page Configuration ---
 st.set_page_config(page_title="Arthavivek", page_icon="🎓", layout="wide")
 
+
 # --- Sidebar ---
 with st.sidebar:
     st.header("Language Settings")
-    languages = ["English", "हिन्दी (Hindi)", "मराठी (Marathi)", "ગુજરાતી (Gujarati)", "বাংলা (Bengali)", "తెలుగు (Telugu)", "தமிழ் (Tamil)"]
+    
+    # --- UPDATED: Create the list dynamically ---
+    languages = ["English"] + list(LANG_CODE_MAP.keys())
     language = st.sidebar.radio("Select Language", languages, help="Select the language for the AI's response.")
+    
     st.divider()
     st.info("Arthavivek is an AI-powered financial literacy coach designed for India's youth.")
 
 # --- Main Title ---
 st.title("🎓 Arthavivek")
 st.caption("Financial Wisdom for India's Youth | भारत के युवाओं के लिए वित्तीय विवेक")
+
+# # --- Sidebar ---
+# with st.sidebar:
+#     st.header("Language Settings")
+#     languages = ["English", "हिन्दी (Hindi)", "मराठी (Marathi)", "ગુજરાતી (Gujarati)", "বাংলা (Bengali)", "తెలుగు (Telugu)", "தமிழ் (Tamil)"]
+#     language = st.sidebar.radio("Select Language", languages, help="Select the language for the AI's response.")
+#     st.divider()
+#     st.info("Arthavivek is an AI-powered financial literacy coach designed for India's youth.")
+
+# # --- Main Title ---
+# st.title("🎓 Arthavivek")
+# st.caption("Financial Wisdom for India's Youth | भारत के युवाओं के लिए वित्तीय विवेक")
 
 # --- Database Connection ---
 client, db, knowledge_base, updates_collection = get_db_connection()
